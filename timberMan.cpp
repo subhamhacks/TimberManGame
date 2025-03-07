@@ -38,7 +38,7 @@ int main()
 	
 	spriteBee.setTexture(textureBee);                     //
 	
-	spriteBee.setPosition(0,800);						//
+	spriteBee.setPosition(0,700);						//
 	
 	bool BeeActive = false;
 	float BeeSpeed = 0;
@@ -79,6 +79,61 @@ int main()
 	
 	Clock clock;
 	
+	RectangleShape timeBar;
+	
+	float timeBarStartWidth = 400;
+	float timeBarHeight = 40;
+	
+	timeBar.setSize(Vector2f(timeBarStartWidth,timeBarHeight));
+	timeBar.setFillColor(Color::Yellow);
+	timeBar.setPosition(750,960);
+	
+	Time gameTimeTotal;
+	float timeRemaining = 6.0;//game starts with 6sec in hand of the player
+	float timeBarWidthPerSecond = timeBarStartWidth/timeRemaining; // 400/6=66.6 pixels reduced per second
+	
+	bool paused = true; //
+	int score=0;        // initially game is paused until start is pressed by user with initial score 0
+	
+	//for text of game
+	Text messageText;
+	Text messageText0;
+	Text scoreText;
+	Text scoreText0;
+	
+	Font font;
+	font.loadFromFile("font/KOMIKAP_.ttf");
+	messageText.setFont(font);
+	messageText0.setFont(font);
+	scoreText.setFont(font);
+	scoreText0.setFont(font);
+	
+	messageText.setString("Press ENTER to start!!!");
+	messageText0.setString("Press ENTER to start!!!");
+	scoreText.setString("Score = 0");
+	scoreText0.setString("Score = 0");
+	
+	messageText.setCharacterSize(75);
+	messageText0.setCharacterSize(75);
+	scoreText.setCharacterSize(50);
+	scoreText0.setCharacterSize(50);
+	
+	messageText.setFillColor(Color::White);
+	messageText0.setFillColor(Color::Black);
+	scoreText.setFillColor(Color::White);
+	scoreText0.setFillColor(Color::Black);
+	
+	FloatRect textRect1 = messageText.getLocalBounds(); //retrieves the local values of left,top,right,bottom of gaming window
+	messageText.setOrigin(textRect1.left + textRect1.width/2, textRect1.top + textRect1.height/2); 
+	messageText.setPosition(960,540);
+	FloatRect textRect2 = messageText0.getLocalBounds(); //retrieves the local values of left,top,right,bottom of gaming window
+	messageText0.setOrigin(textRect2.left + textRect2.width/2, textRect2.top + textRect2.height/2); 
+	messageText0.setPosition(955,535);
+	scoreText.setPosition(50,50);
+	scoreText0.setPosition(46,46);
+	
+	//gaming loop	
+		
 	while(window.isOpen())                                              //
 	{                                                                   //   
 		Event event;                                                   //
@@ -94,7 +149,27 @@ int main()
 			window.close();
 		}
 		
-		Time dt = clock.restart(); //reinitialize the time as 0
+		if(Keyboard::isKeyPressed(Keyboard::Return)) 
+		//when enter is pressed by user game isn't paused anymore and starts with a score of 0             
+		{
+			paused=false;
+			score=0;
+		}
+		
+		Time dt = clock.restart(); //reinitialize the time
+		
+		if(!paused)
+		{
+			timeRemaining -= dt.asSeconds();  //makes time bar reduction frame rate independent : 6-(1/60)
+			timeBar.setSize(Vector2f(timeBarWidthPerSecond*timeRemaining,timeBarHeight));//decreases time bar 
+				
+			if(timeRemaining<=0)
+			{
+				paused=true; //stops the time bar after its exhausted
+			}	
+			
+		}
+		
 		
 		if(!BeeActive)
 		{
@@ -108,6 +183,7 @@ int main()
 		else
 		{
 			spriteBee.setPosition(spriteBee.getPosition().x - (BeeSpeed * dt.asSeconds()),spriteBee.getPosition().y); 
+			//dt.asSeconds() makes it fps independent/ frame rate independence
 			//decreases X values for right to left movement with 60fps for example
 			if(spriteBee.getPosition().x < 0)
 			{
@@ -117,7 +193,7 @@ int main()
 		
 		if(!CloudActive1)
 		{
-			srand((int)time(0));
+			srand((int)time(0)*10);
 			CloudSpeed1=(rand() % 100)+100; //random speed between 200 - 400
 			spriteCloud1.setPosition(-800,50); //initializes bee position
 			float height=(rand() % 50)+400; //random height between 500 - 1000
@@ -136,7 +212,7 @@ int main()
 		
 		if(!CloudActive2)
 		{
-			srand((int)time(0));
+			srand((int)time(0)*10);
 			CloudSpeed2=(rand() % 200)+100; //random speed between 200 - 400
 			spriteCloud2.setPosition(-1000,250); //initializes bee position
 			float height=(rand() % 50)+400; //random height between 500 - 1000
@@ -155,7 +231,7 @@ int main()
 		
 		if(!CloudActive3)
 		{
-			srand((int)time(0));
+			srand((int)time(0)*10);//
 			CloudSpeed3=(rand() % 150)+100; //random speed between 200 - 400
 			spriteCloud3.setPosition(-500,150); //initializes bee position
 			float height=(rand() % 50)+400; //random height between 500 - 1000
@@ -179,6 +255,11 @@ int main()
 	window.draw(spriteCloud3);
 	window.draw(spriteTree);
 	window.draw(spriteBee);
+	window.draw(timeBar);
+	window.draw(messageText0);
+	window.draw(messageText);
+	window.draw(scoreText0);
+	window.draw(scoreText);
 	window.display();
 	}
 	
