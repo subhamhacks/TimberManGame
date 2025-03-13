@@ -1,6 +1,18 @@
 #include <SFML/Graphics.hpp>
 using namespace sf;
 
+void updateBranches(int seed);
+ 
+
+const int NUM_BRANCHES = 6;
+Sprite branches[NUM_BRANCHES];
+ 
+
+enum class side{ LEFT, RIGHT, NONE };
+ 
+
+side branchPositions[NUM_BRANCHES];
+
 int main()
 {
 	VideoMode vm(1920,1080);
@@ -97,40 +109,37 @@ int main()
 	
 	//for text of game
 	Text messageText;
-	Text messageText0;
 	Text scoreText;
-	Text scoreText0;
 	
 	Font font;
 	font.loadFromFile("font/KOMIKAP_.ttf");
 	messageText.setFont(font);
-	messageText0.setFont(font);
 	scoreText.setFont(font);
-	scoreText0.setFont(font);
 	
 	messageText.setString("Press ENTER to start!!!");
-	messageText0.setString("Press ENTER to start!!!");
 	scoreText.setString("Score = 0");
-	scoreText0.setString("Score = 0");
 	
 	messageText.setCharacterSize(75);
-	messageText0.setCharacterSize(75);
 	scoreText.setCharacterSize(50);
-	scoreText0.setCharacterSize(50);
 	
 	messageText.setFillColor(Color::White);
-	messageText0.setFillColor(Color::Black);
 	scoreText.setFillColor(Color::White);
-	scoreText0.setFillColor(Color::Black);
 	
-	FloatRect textRect1 = messageText.getLocalBounds(); //retrieves the local values of left,top,right,bottom of gaming window
-	messageText.setOrigin(textRect1.left + textRect1.width/2, textRect1.top + textRect1.height/2); 
+	FloatRect textRect = messageText.getLocalBounds(); //retrieves the local values of left,top,right,bottom of gaming window
+	messageText.setOrigin(textRect.left + textRect.width/2, textRect.top + textRect.height/2); 
 	messageText.setPosition(960,540);
-	FloatRect textRect2 = messageText0.getLocalBounds(); //retrieves the local values of left,top,right,bottom of gaming window
-	messageText0.setOrigin(textRect2.left + textRect2.width/2, textRect2.top + textRect2.height/2); 
-	messageText0.setPosition(955,535);
 	scoreText.setPosition(50,50);
-	scoreText0.setPosition(46,46);
+	
+	Texture textureBranch;
+	textureBranch.loadFromFile("graphics/branch.png");
+	 
+
+	for( int i = 0; i < NUM_BRANCHES; i++)
+	{
+		branches[i].setTexture(textureBranch);
+		branches[i].setPosition(-2000, -2000); //(1110, 200) with origin (0, 0) is the ideal position
+		branches[i].setOrigin(220, 20);
+	}
 	
 	//gaming loop	
 		
@@ -154,6 +163,7 @@ int main()
 		{
 			paused=false;
 			score=0;
+			timeRemaining=6;
 		}
 		
 		Time dt = clock.restart(); //reinitialize the time
@@ -166,9 +176,13 @@ int main()
 			if(timeRemaining<=0)
 			{
 				paused=true; //stops the time bar after its exhausted
+				messageText.setString("GAME OVER!!!");
+				messageText.setFillColor(Color::Red);
+				messageText.setCharacterSize(130);
+				FloatRect textRect = messageText.getLocalBounds();
+				messageText.setOrigin(textRect.left + textRect.width / 2.0f, textRect.top + textRect.height / 2.0f);
+				messageText.setPosition(960, 540);
 			}	
-			
-		}
 		
 		
 		if(!BeeActive)
@@ -247,21 +261,84 @@ int main()
 				CloudActive3=false;	
 			}
 		}
-	
+		
+		//placing branches:
+		for(int i=0;i<NUM_BRANCHES;i++)
+		{
+			updateBranches(i);
+		}
+		for(int i=0;i<NUM_BRANCHES;i++)
+		{
+			float height = i * 150;
+			
+			if(branchPositions[i]==side::LEFT)
+			{
+				branches[i].setPosition(610, height);
+				branches[i].setOrigin(220,40);
+				branches[i].setRotation(180);
+			}
+			else if(branchPositions[i]==side::RIGHT)
+			{
+				branches[i].setPosition(1330, height);
+				branches[i].setOrigin(240,40);
+				branches[i].setRotation(0);
+			}
+			else
+			{
+				branches[i].setPosition(3000,height);
+			}
+		}
+	}
+		
 	window.clear();
 	window.draw(spriteBackground);
 	window.draw(spriteCloud1);
 	window.draw(spriteCloud2);
 	window.draw(spriteCloud3);
+	
+	for(int i=0;i<NUM_BRANCHES;i++)
+	{
+		window.draw(branches[i]);
+	}
+	
 	window.draw(spriteTree);
 	window.draw(spriteBee);
 	window.draw(timeBar);
-	window.draw(messageText0);
 	window.draw(messageText);
-	window.draw(scoreText0);
 	window.draw(scoreText);
 	window.display();
 	}
 	
 	return 0;
+}
+
+void updateBranches(int seed) 
+{
+ 
+
+	//Shift all branches down 
+	for (int i = NUM_BRANCHES - 1; i > 0; i--) 
+	{
+		branchPositions[i] = branchPositions[i - 1];
+	}
+	 
+
+	//New branch at zeroth position (Top of tree)
+	srand((int)time(0) + seed);
+	int r = (rand() % 5);
+	switch (r) {
+	case 0:
+	branchPositions[0] = side::LEFT;
+	break;
+	 
+
+	case 1:
+	branchPositions[0] = side::RIGHT;
+	break;
+	 
+
+	default:
+	branchPositions[0] = side::NONE;
+	break;
+	}
 }
